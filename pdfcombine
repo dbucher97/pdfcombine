@@ -18,7 +18,7 @@ info=""
 for input in $inputs; do
 	pdftk $input dump_data output "pdftmp/$input.txt"
 	n=$(grep NumberOfPages "pdftmp/$input.txt" | cut -d: -f2)
-	title=$input
+	title=$(echo ${input%.pdf} | sed -r "s/_/ /g")
 	info=$info"BookmarkBegin\nBookmarkTitle: $title\nBookmarkLevel: 1\nBookmarkPageNumber: $((lastpage+1))\n"
 	bm=$(grep Bookmark "pdftmp/$input.txt")
 	if [[ ! -z $bm ]]; then
@@ -41,5 +41,4 @@ pdftk "pdftmp/$output" dump_data output "pdftmp/info.txt"
 echo -e "$info" >> "pdftmp/info.txt"
 pdftk "pdftmp/$output" update_info "pdftmp/info.txt" output $output
 
-#rm -rf pdftmp
-
+rm -rf pdftmp
