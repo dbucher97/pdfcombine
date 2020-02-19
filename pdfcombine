@@ -1,0 +1,45 @@
+#! /usr/bin/env sh
+
+
+[[ ! -d pdftmp ]] && mkdir pdftmp
+
+if [[ $# -lt 3 ]]; then
+	echo "Please specify at least two inputs and one output!"
+	exit 1
+fi
+
+inputs=${@:1:$#-1}
+output="${@:$#}"
+
+lastpage=0
+
+info=""
+
+for input in $inputs; do
+	pdftk $input dump_data output "pdftmp/$input.txt"
+	n=$(grep NumberOfPages "pdftmp/$input.txt" | cut -d: -f2)
+	title=$input
+	info=$info"BookmarkBegin\nBookmarkTitle: $title\nBookmarkLevel: 1\nBookmarkPageNumber: $((lastpage+1))\n"
+	bm=$(grep Bookmark "pdftmp/$input.txt")
+	if [[ ! -z $bm ]]; then
+		bm=$(echo -e "$bm" | awk -F: -v p=$lastpage '{
+			if ($1 == "BookmarkLevel") 
+				{print $1": "$2+1} 
+			else if ($1 == "BookmarkPageNumber") 
+				{print $1": "$2+p} 
+			else 
+				{print $0}
+		}')
+		info=$info$bm"\n"
+	fi
+	lastpage=$(($lastpage+$n))
+done
+
+pdfunite $inputs "pdftmp/$output"
+
+pdftk "pdftmp/$output" dump_data output "pdftmp/info.txt"
+echo -e "$info" >> "pdftmp/info.txt"
+pdftk "pdftmp/$output" update_info "pdftmp/info.txt" output $output
+
+#rm -rf pdftmp
+
