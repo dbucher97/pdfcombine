@@ -1,0 +1,3 @@
+#!p /usr/bin/env sh
+
+cp pdfcombine /usr/bin/
