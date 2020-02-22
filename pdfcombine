@@ -16,6 +16,8 @@ lastpage=0
 info=""
 
 for input in $inputs; do
+	[[ ! "$input" == "${input%/*}" ]] && mkdir -p "pdftmp/${input%/*}"
+	exit
 	pdftk $input dump_data output "pdftmp/$input.txt"
 	n=$(grep NumberOfPages "pdftmp/$input.txt" | cut -d: -f2)
 	title=$(echo ${input%.pdf} | sed -r "s/_/ /g")
